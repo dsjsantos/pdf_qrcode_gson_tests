@@ -1,0 +1,83 @@
+
+/* === Contrato */
+div#contrato_wrapper {
+	font-size: 12px;
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+
+div#contrato_wrapper div.header {
+	font-size: larger;
+	margin-bottom: 10px;
+}
+
+div#contrato_wrapper div.body {
+	margin: 0px 10px;
+}
+
+div#contrato_wrapper div.footer {
+	margin-top: 10px;
+}
+
+div#contrato_wrapper img {
+	max-width: 100%;
+	max-height: 100%;
+	display: block;
+}
+
+div#contrato_wrapper p {
+	padding: 0px;
+	margin: 0px 0px 10px 0px;
+}
+
+div#contrato_wrapper blockquote {
+	padding: 7px 5px;
+	margin-left: 10px;
+	display: block;
+	background-color: #e0e0e0;
+}
+
+div#contrato_wrapper span.larger {
+	font-size: 110%;
+}
+
+div#contrato_wrapper span.smaller {
+	font-size: 95%;
+}
+
+/* Usado pelo PDF (não possui body tag) */
+div#contrato_wrapper p.title, div#contrato_wrapper p.subtitle {
+	text-align: center;
+	font-weight: bold;
+}
+
+div#contrato_wrapper p.title {
+	font-size: 16px;
+}
+
+div#contrato_wrapper p.subtitle {
+	font-size: 14px;
+}
+
+/* Usado pelo visualizador que está dentro da tag body */
+body.visualizaContrato div#contrato_wrapper p.title, body.visualizaContrato div#contrato_wrapper p.subtitle  {
+	text-align: center;
+	font-weight: bold;
+}
+
+body.visualizaContrato div#contrato_wrapper p.title {
+	font-size: 16px !important;
+}
+
+body.visualizaContrato div#contrato_wrapper p.subtitle  {
+	font-size: 14px !important;
+}
+
+
+div.imgTeste {
+	background-image: url('data:image/png;base64,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');
+	width: 204px;	
+	height: 204px;
+}
