@@ -1,5 +1,15 @@
 package local.dsjsantos.pdf_qrcode_gson_tests;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import local.dsjsantos.pdf_qrcode_gson_tests.model.ItemsVO;
+import local.dsjsantos.pdf_qrcode_gson_tests.tools.HTMLToPDF;
+import local.dsjsantos.pdf_qrcode_gson_tests.tools.QRCodeBuilder;
+import org.apache.commons.io.IOUtils;
+import org.xhtmlrenderer.pdf.ITextRenderer;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -17,17 +27,8 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
-import local.dsjsantos.pdf_qrcode_gson_tests.tools.HTMLToPDF;
-import local.dsjsantos.pdf_qrcode_gson_tests.tools.QRCodeBuilder;
-import org.apache.commons.io.IOUtils;
-import org.xhtmlrenderer.pdf.ITextRenderer;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 @SuppressWarnings("unused")
 public class App {
@@ -103,20 +104,115 @@ public class App {
             e.printStackTrace();
             return null;
         }
+    }
 
+    public static String gerarLocalizador(Integer pacCodigo) {
+        if(pacCodigo == null) {
+            return null;
+        }
 
+        // calculo do dv
+        int sum = 0;
+        int position = 2;
+        int number = pacCodigo;
+        while (number > 0) {
+            int digit = number % 10;
+            sum += position * digit;
+            number /= 10;
+            position++;
+        }
+        int dv = (int) (sum % 11);
+
+        // monta localizador
+        String hexaValue = Integer.toHexString(pacCodigo);
+        String paddedHexaValue = "0000000".substring(hexaValue.length()) + hexaValue;
+        String convertedDV = Character.toString((char) (65 + dv));
+        String localizador = (convertedDV + paddedHexaValue).toUpperCase();
+        return localizador;
+    }
+
+    public static List<ItemsVO> buildItemsList(int size) {
+        List<ItemsVO> result = new ArrayList<>();
+        for(int i=1; i<=size; i++) {
+            ItemsVO item = new ItemsVO();
+            item.setItemId(i);
+            item.setDescription("Description " + i);
+            result.add(item);
+        }
+        return result;
+    }
+
+    public static void listDirectory() {
+        try {
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command("/bin/bash", "-c", "ls -la");
+            builder.directory(new File("/tmp"));
+            Process process = builder.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            List<String> cmdOutput = reader.lines().toList();
+            reader.close();
+            System.out.println("Clock sync command output:\n" + String.join("\n", cmdOutput));
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                System.out.println("[ERROR] Unexpected exit code (" + exitCode + ")");
+            }
+        } catch (IOException | InterruptedException e) {
+            System.out.println("[ERROR] Failed synchronizing system clock");
+        }
     }
 
     public static void main( String[] args ) {
-
         try {
             // Arguments
-            int i = 0;
+            int j = 0;
             for(String arg : args) {
-                i++;
-                System.out.println("Argumento " + i + ": " + arg);
+                j++;
+                System.out.println("Argumento " + j + ": " + arg);
             }
             System.out.println(">>> Fim argumentos\n");
+
+            // Teste list chunks
+            int listSize;
+            try {
+                listSize = Integer.parseInt(args[0]);
+            } catch (Exception e) {
+                listSize = 19;
+            }
+            int maxRegistros = 5;
+            List<ItemsVO> itemsList = buildItemsList(listSize);
+            final AtomicInteger counter = new AtomicInteger();
+            final Collection<List<ItemsVO>> listaLotes = itemsList.stream()
+                    .collect(Collectors.groupingBy(item -> counter.getAndIncrement()/maxRegistros))
+                    .values();
+
+            System.out.println("Lotes:" + listaLotes.size());
+            System.out.println(listaLotes);
+
+            // Call system command (ls -la)
+            listDirectory();
+
+            if(itemsList.isEmpty()) {
+                return;
+            }
+
+            // Teste Localizador
+            Integer codigo = 1;
+            System.out.println("Teste (" + codigo + "): " + gerarLocalizador(codigo));
+            codigo = 1000;
+            System.out.println("Teste (" + codigo + "): " + gerarLocalizador(codigo));
+            codigo = 268435454;
+            System.out.println("Teste (" + codigo + "): " + gerarLocalizador(codigo));
+            codigo = 268435455;
+            System.out.println("Teste (" + codigo + "): " + gerarLocalizador(codigo));
+            codigo = null;
+            System.out.println("Null test: " + gerarLocalizador(codigo));
+            System.out.print("\n");
+
+            if(codigo > 2000000) {
+                throw new Exception("Forced exception.");
+            }
 
             // Sample 1
             Gson gson = new Gson();
@@ -275,6 +371,5 @@ public class App {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
     }
 }
